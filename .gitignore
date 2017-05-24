@@ -1,0 +1,9 @@
+actionscript/.idea
+Main.iml
+project.properties
+build/temp
+demo_app
+.DS_STORE
+UserInterfaceState.xcuserstate
+ios/HapticFeedback.xcodeproj/project.xcworkspace/xcuserdata/*.xcuserdatad
+ios/HapticFeedback.xcodeproj/xcuserdata/*.xcuserdatad

@@ -1,0 +1,17 @@
+<extension xmlns="http://ns.adobe.com/air/extension/19.0">
+  <id>com.digitalstrawberry.ane.hapticfeedback</id>
+  <versionNumber>1.0.0</versionNumber>
+  <platforms>
+    <platform name="iPhone-ARM">
+        <applicationDeployment>
+            <nativeLibrary>libHapticFeedback.a</nativeLibrary>
+            <initializer>HapticFeedbackInitializer</initializer>
+            <finalizer>HapticFeedbackFinalizer</finalizer>
+        </applicationDeployment>
+    </platform>
+
+    <platform name="default">
+        <applicationDeployment/>
+    </platform>
+  </platforms>
+</extension>

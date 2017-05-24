@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="HapticFeedback build scripts" default="all">
+
+    <!-- Config -->
+    <property file="build.properties"/>
+
+    <!-- All -->
+    <target name="all" depends="swc,ios,package" description="Full build of extension"/>
+
+    <!--
+
+    ================================================================
+                                        iOS
+    ================================================================
+
+    -->
+    <target name="ios" description="Build iOS Library">
+
+        <!-- make the build directory for the objc code -->
+        <mkdir dir="temp/ios/build/"/>
+
+        <!-- clean the build -->
+        <exec executable="xcodebuild" failonerror="true" dir="../ios/">
+            <arg line="-project ${name}.xcodeproj"/>
+            <arg line="-alltargets clean"/>
+        </exec>
+
+        <!-- compile the ios lib -->
+        <exec executable="xcodebuild" failonerror="true" dir="../ios/">
+            <arg line="-project ${name}.xcodeproj"/>
+            <arg line="-sdk ${ios.sdkversion}"/>
+            <arg line="-alltargets"/>
+            <arg line="-configuration Release"/>
+            <arg line="SYMROOT=../build/temp/ios/build/"/>
+        </exec>
+
+        <!-- copy the ios lib to the base temp ios directory -->
+        <copy file="temp/ios/build/Release-iphoneos/lib${name}.a" todir="temp/ios" overwrite="true"/>
+        
+        <!-- Copy over required frameworks and libs -->
+        <copy todir="temp/ios/AIRExtHelpers.framework" overwrite="true">
+            <fileset dir="../ios/HapticFeedback/Frameworks/AIRExtHelpers.framework"/>
+        </copy>
+
+        <!-- remove the build directory -->
+        <delete dir="temp/ios/build/"/>
+    </target>
+
+
+
+    <!--
+
+    ================================================================
+                            Actionscript (SWC)
+    ================================================================
+
+    -->
+    <target name="swc" description="Build SWC library">
+        <mkdir dir="temp/swc/content/"/>
+
+        <fileset dir="../actionscript/src" casesensitive="yes" id="classfiles">
+            <include name="**/*.as"/>
+        </fileset>
+
+        <pathconvert property="classlist" refid="classfiles" pathsep=" " dirsep=".">
+            <regexpmapper from=".*src.(.*)\.as" to="\1"/>
+        </pathconvert>
+
+        <exec executable="${air.sdk}/bin/compc${bin.ext}" failonerror="true">
+            <env key="AIR_SDK_HOME" value="${air.sdk}"/>
+            <arg line='-define+=CONFIG::ane,true'/>
+            <arg line='-source-path ../actionscript/src'/>
+            <arg line='-output temp/swc/${name}.swc'/>
+            <arg line='-swf-version=30'/>
+            <arg line='-external-library-path+="${air.sdk}/frameworks/libs/air/airglobal.swc"'/>
+            <arg line='-include-classes ${classlist}'/>
+        </exec>
+
+        <unzip src="temp/swc/${name}.swc" dest="temp/swc/content" overwrite="true"/>
+
+        <copy file="temp/swc/content/library.swf" todir="temp/ios" overwrite="true"/>
+        <copy file="temp/swc/content/library.swf" todir="temp/android" overwrite="true"/>
+
+        <!-- Create SWC without flash.external.ExtensionContext dependency -->
+        <delete file="temp/swc/${name}.swc" />
+        <delete dir="temp/swc/content"/>
+        <exec executable="${air.sdk}/bin/compc${bin.ext}" failonerror="true">
+            <env key="AIR_SDK_HOME" value="${air.sdk}"/>
+            <arg line='-define+=CONFIG::ane,false'/>
+            <arg line='-source-path ../actionscript/src'/>
+            <arg line='-output temp/swc/${name}.swc'/>
+            <arg line='-swf-version=30'/>
+            <arg line='-external-library-path+="${air.sdk}/frameworks/libs/air/airglobal.swc"'/>
+            <arg line='-include-classes ${classlist}'/>
+        </exec>
+        <unzip src="temp/swc/${name}.swc" dest="temp/swc/content" overwrite="true"/>
+        <!-- Copy .swc to bin directory -->
+        <copy file="temp/swc/${name}.swc" tofile="../bin/${packageName}.swc" overwrite="true" />
+        <!-- Use the SWF for the default target -->
+        <copy file="temp/swc/content/library.swf" todir="temp/default" overwrite="true"/>
+    </target>
+
+    <!--
+
+    ================================================================
+                                Package
+    ================================================================
+
+    -->
+    <target name="package" description="Create the extension package">
+        <exec executable="${air.sdk}/bin/adt${bin.ext}" failonerror="true" dir="temp/">
+            <arg value="-package"/>
+            <arg value="-target"/>
+            <arg value="ane"/>
+            <arg value="${packageName}.ane"/>
+            <arg value="../extension.xml"/>
+            <arg line="-swc swc/${name}.swc"/>
+            <arg line="-platform iPhone-ARM -platformoptions ../platform-ios.xml -C ios/ ."/>
+            <arg line="-platform default -C default/ ."/>
+        </exec>
+
+        <copy file="temp/${packageName}.ane" todir="../demo_app/assets"/>
+        <move file="temp/${packageName}.ane" todir="../bin"/>
+
+        <delete dir="temp/"/>
+    </target>
+
+
+
+    <!--
+
+    ================================================================
+                            HTML Documentation
+    ================================================================
+
+     -->
+    <target name="asdoc" description="generate the asdoc in readable html">
+        <exec executable="${air.sdk}/bin/asdoc${bin.ext}" failonerror="false">
+            <env key="JAVA_HOME" value="/Library/Java/JavaVirtualMachines/1.6.0.jdk/Contents/Home"/>
+            <env key="FLEX_HOME" value="${air.sdk}"/>
+            <env key="FALCON_HOME" value="${air.sdk}"/>
+            <arg line='-define+=CONFIG::ane,true'/>
+            <arg line='-source-path ../actionscript/src'/>
+            <arg line='-doc-sources ../actionscript/src'/>
+            <arg line='-output ../docs'/>
+            <arg line='-library-path+="${air.sdk}/frameworks/libs/air/airglobal.swc"'/>
+        </exec>
+    </target>
+
+</project>
