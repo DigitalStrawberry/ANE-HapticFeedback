@@ -40,7 +40,7 @@ package com.digitalstrawberry.ane.hapticfeedback
 		/**
 		 * Extension version.
 		 */
-		public static const VERSION:String = "1.0.0";
+		public static const VERSION:String = "1.1.0";
 
 		private static const EXTENSION_ID:String = "com.digitalstrawberry.ane.hapticfeedback";
 		private static const iOS:Boolean = Capabilities.manufacturer.indexOf("iOS") > -1;
