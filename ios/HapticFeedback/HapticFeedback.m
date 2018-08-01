@@ -41,8 +41,8 @@ static HapticFeedback* airHapticFeedbackSharedInstance = nil;
 
 @implementation HapticFeedback {
     NSMutableDictionary* _generatorsMap;
-    NSArray* _supportedDevices;
     NSString* _deviceId;
+    BOOL _isAvailable;
 }
 
 @synthesize showLogs;
@@ -62,12 +62,26 @@ static HapticFeedback* airHapticFeedbackSharedInstance = nil;
     if( self != nil ) {
         _generatorsMap = [NSMutableDictionary dictionary];
         
-        // Supported devices are iPhone 7 and 7 Plus (CDMA, GSM networks included)
-        _supportedDevices = @[@"iPhone9,1", @"iPhone9,2", @"iPhone9,3", @"iPhone9,4"];
+        _isAvailable = NO;
         
         struct utsname systemInfo;
         uname(&systemInfo);
         _deviceId = [NSString stringWithCString:systemInfo.machine encoding:NSUTF8StringEncoding];
+        
+        if(_deviceId != nil)
+        {
+            NSRange prefixRange = [_deviceId rangeOfString:@"iPhone"];
+            if(prefixRange.location != NSNotFound)
+            {
+                NSString* deviceVer = [_deviceId substringFromIndex:prefixRange.length];
+                deviceVer = [deviceVer stringByReplacingOccurrencesOfString:@"," withString:@"."];
+                float ver = [deviceVer floatValue];
+                
+                // Available on iOS 10 and iPhone 7 and newer
+                _isAvailable = NSFoundationVersionNumber > NSFoundationVersionNumber_iOS_9_x_Max;
+                _isAvailable = _isAvailable && (ver > 9.0);
+            }
+        }
     }
     
     return self;
@@ -163,15 +177,7 @@ static HapticFeedback* airHapticFeedbackSharedInstance = nil;
 }
 
 - (BOOL) isAvailable {
-    if( NSFoundationVersionNumber <= NSFoundationVersionNumber_iOS_9_x_Max ) {
-        return NO;
-    }
-    
-    if( _deviceId == nil ) {
-        return NO;
-    }
-    
-    return [_supportedDevices containsObject:_deviceId];
+    return _isAvailable;
 }
 
 # pragma mark - Private API
