@@ -112,6 +112,10 @@ _selectionGenerator = null;
 
 ## Changelog
 
+### August 1, 2018 (v1.1.0)
+
+* Added support for new iPhones
+
 ### May 24, 2017 (v1.0.0)
 
 * Public release
